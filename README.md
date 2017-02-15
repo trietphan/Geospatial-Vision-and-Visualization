@@ -1,9 +1,11 @@
 # Geospatial-Vision-and-Visualization
 Geospatial Vision and Visualization - CS 513
 
-# Using vagrant box
+# Using Vagrant Box
 
-Basic commands
+Install [Vagrant](https://www.vagrantup.com/) first. Here's a [link](https://www.vagrantup.com/docs/installation/) to instructions.
+
+## Basic Commands
 
 ```bash
 $ vagrant up # start
@@ -11,7 +13,7 @@ $ vagrant halt # stop
 $ vagrant ssh # ssh into the box
 ```
 
-## First run
+## First Run
 
 First `vagrant up` will take a ton of time, so be prepared for that.
 
@@ -30,6 +32,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 '3.1.0'
 ```
 
-## Directory structure
+## Directory Structure
 
 You can access your currently mounted directory at `/vagrant`.
