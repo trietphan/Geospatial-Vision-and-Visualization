@@ -5,9 +5,15 @@ Geospatial Vision and Visualization - CS 513
 
 Install [Vagrant](https://www.vagrantup.com/) first. Here's a [link](https://www.vagrantup.com/docs/installation/) to instructions.
 
+```bash
+$ brew cask install virtualbox
+$ brew cask install vagrant
+$ brew cask install vagrant-manager
+```
+
 ## Basic Commands
 
-```bash
+```
 $ vagrant up # start
 $ vagrant halt # stop
 $ vagrant ssh # ssh into the box
@@ -30,6 +36,12 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import cv2
 >>> cv2.__version__
 '3.1.0'
+```
+
+Don't forget to input these commands:
+```
+$ workon cv
+$ python
 ```
 
 ## Directory Structure
