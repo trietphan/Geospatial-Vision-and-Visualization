@@ -1,5 +1,6 @@
 .vagrant/
 .DS_Store
+*.jpg
 
 # Created by https://www.gitignore.io/api/opencv,python
 
