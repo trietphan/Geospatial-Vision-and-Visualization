@@ -14,7 +14,7 @@ def create_image_generator(folder):
     files = listdir(folder)
 
     return (read_image(path.join(folder, filename))
-            for filename in files[:100])
+            for filename in files)
 
 def main():
     image_folder = '/vagrant/Homework1/sample_drive/cam_3'
@@ -27,10 +27,10 @@ def main():
 
     process = pipe_through(to_grayscale, threshold, dilate, detect_edges)
 
-    acc = np.zeros(to_grayscale(first_image).shape, np.uint8)
-    for (idx, image) in enumerate(images_from_1):
+    image_shape = to_grayscale(first_image).shape
+    acc = np.zeros(image_shape, np.uint8)
+    for image in images_from_1:
         acc = acc + process(image)
-        write_image('/vagrant/Homework1/results/res' + str(idx) + '.jpg', acc)
 
     write_image('/vagrant/Homework1/results/res.jpg', acc)
 
