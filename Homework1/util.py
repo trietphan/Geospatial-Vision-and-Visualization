@@ -6,3 +6,6 @@ def pipe_through(*fns):
         return acc
 
     return result_fn
+
+def last(lst):
+    return lst[-1]
