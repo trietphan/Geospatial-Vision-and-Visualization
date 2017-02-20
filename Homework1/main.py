@@ -7,7 +7,8 @@ from image_util import (
     threshold,
     dilate,
     detect_edges,
-    to_grayscale
+    to_grayscale,
+    empty_image
 )
 
 def create_image_generator(folder):
@@ -18,21 +19,22 @@ def create_image_generator(folder):
 
 def main():
     image_folder = '/vagrant/Homework1/sample_drive/cam_3'
+    reset_every = 500
 
-    # second generator is for pairwise images
-    # and to get the first image dimensions
-    images_from_1 = create_image_generator(image_folder)
-    images_from_2 = create_image_generator(image_folder)
-    first_image = next(images_from_2)
+    images = create_image_generator(image_folder)
+    first_image = next(images) # given the number of images we can safely ignore the first
 
     process = pipe_through(to_grayscale, threshold, dilate, detect_edges)
 
     image_shape = to_grayscale(first_image).shape
-    acc = np.zeros(image_shape, np.uint8)
-    for image in images_from_1:
+    acc = empty_image(image_shape)
+
+    for (idx, image) in enumerate(images):
+        if idx % reset_every == 0:
+            write_image('/vagrant/Homework1/results/res@3:' + str(idx) + '.jpg', acc)
+            acc = empty_image(image_shape)
         acc = acc + process(image)
 
-    write_image('/vagrant/Homework1/results/res.jpg', acc)
 
 if __name__ == '__main__':
     main()

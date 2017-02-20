@@ -28,3 +28,7 @@ def threshold(image):
 
 def equalize_hist(image):
     return cv2.equalizeHist(image)
+
+
+def empty_image(image_shape):
+    return np.zeros(image_shape, np.uint8)
