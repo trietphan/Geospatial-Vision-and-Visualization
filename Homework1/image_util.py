@@ -22,13 +22,15 @@ def erode(image):
     kernel = np.ones((5, 5), np.uint8)
     return cv2.erode(image, kernel, iterations = 1)
 
-def threshold(image):
-    (treshold_low, threshold_high) = (130, 255)
-    _, result = cv2.threshold(image,
-                              treshold_low,
-                              threshold_high,
-                              cv2.THRESH_BINARY)
-    return result
+def threshold(low):
+    high = 255
+    def threshold_fn(image):
+        _, result = cv2.threshold(image,
+                                  low,
+                                  high,
+                                  cv2.THRESH_BINARY)
+        return result
+    return threshold_fn
 
 def equalize_hist(image):
     return cv2.equalizeHist(image)
@@ -43,19 +45,31 @@ def clahe(image):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     return clahe.apply(image)
 
-def draw_contours(image):
+def draw_contours(take):
+    ''' Returns a function that draws `take` contours '''
     (max_contour_area, min_contour_area) = (20000, 2000)
 
-    result = image.copy()
-    _, contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    contours = [c
-                for c in contours
-                if cv2.contourArea(c) > min_contour_area and cv2.contourArea(c) < max_contour_area]
+    def draw_contours_fn(image):
+        ''' Draws `take` contours found on `image`
+            Returns a grayscale canvas with just `take` contours
+            drawn on it.
+            Original `image` is not modified.
+        '''
 
-    contours = sorted(contours, key = cv2.contourArea, reverse = True)[:5]
-    result = cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
-    cv2.drawContours(result, contours, -1, (0, 255, 0), 3)
-    return result
+        result = empty_image(image.shape)
+        image_copy = image.copy()
+        _, contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        image = image_copy # findContours modifies image so we swap it out for a copy
+        contours = [c
+                    for c in contours
+                    if cv2.contourArea(c) > min_contour_area and cv2.contourArea(c) < max_contour_area]
+
+        contours = sorted(contours, key = cv2.contourArea, reverse = True)[:take]
+        cv2.drawContours(result, contours, -1, 255, cv2.FILLED)
+        return result
+
+    return draw_contours_fn
 
 def empty_image(image_shape):
     return np.zeros(image_shape, np.uint8)
