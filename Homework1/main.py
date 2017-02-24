@@ -1,4 +1,5 @@
 from os import (listdir, path, makedirs)
+import sys
 from math import floor
 import numpy as np
 from util import (pipe_through, last)
@@ -31,8 +32,6 @@ def clean_images(input_folder, reset_every=500):
     first_image = next(images) # given the number of images we can safely ignore the first
     image_shape = to_grayscale(first_image).shape
 
-    # TODO: add/change function in this pipeline for better results
-    # TODO: try to adjust number in any of the existing functions at image_util.py
     process = pipe_through(to_grayscale, threshold(120), dilate, detect_edges)
 
     acc = empty_image(image_shape)
@@ -59,7 +58,8 @@ def get_most_frequent_contours(input_images):
 
 
 def main():
-    input_folder = '/vagrant/Homework1/sample_drive/cam_3'
+    path_to_images = sys.argv[1]
+    input_folders = (path_to_images, ['cam_0', 'cam_1', 'cam_2', 'cam_3', 'cam_5'])
     output_folder = '/vagrant/Homework1/results'
 
     if not path.exists(output_folder):
@@ -68,8 +68,10 @@ def main():
     get_result_title = lambda input_folder: '.'.join([last(path.split(input_folder)), 'result', 'jpg'])
     get_result_path = lambda input_folder, output_folder: path.join(output_folder, get_result_title(input_folder))
 
-    write_image(path.join(output_folder, get_result_path(input_folder, output_folder)),
-                get_most_frequent_contours(clean_images(input_folder, reset_every=500)))
+    for input_folder in [path.join(input_folders[0], f) for f in input_folders[1]]:
+        print('processing', input_folder)
+        write_image(path.join(output_folder, get_result_path(input_folder, output_folder)),
+                    get_most_frequent_contours(clean_images(input_folder, reset_every=500)))
 
 
 if __name__ == '__main__':
