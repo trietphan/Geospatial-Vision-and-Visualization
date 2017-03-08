@@ -32,6 +32,7 @@ packages=(
     "python2.7-dev"
     "python3.5-dev"
     "software-properties-common"
+    "zsh"
 )
 
 for package in "${packages[@]}"
