@@ -1,4 +1,4 @@
-import csv, json
+import csv
 from peewee import * 
 from datetime import datetime
 from pathlib import Path
