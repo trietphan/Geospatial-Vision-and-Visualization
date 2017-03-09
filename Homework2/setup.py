@@ -1,7 +1,6 @@
 import csv
 from peewee import * 
 from pathlib import Path
-from tqdm import tqdm # optional - remember to install tqdm using pip/pip3 
 
 db = SqliteDatabase('probe.db')
 
@@ -96,7 +95,7 @@ def setup(db):
   ProbeRead = csv.DictReader(f, fieldnames=ProbePoint.get_csv_headers())
   
   with db.atomic():
-    for point in tqdm(list(ProbeRead)):
+    for point in ProbeRead:
       ProbePoint.create(**point).save()
     
   # Link Data
@@ -104,7 +103,7 @@ def setup(db):
   LinkRead = csv.DictReader(f, fieldnames=LinkPoint.get_csv_headers())
     
   with db.atomic(): 
-    for point in tqdm(list(LinkRead)):
+    for point in LinkRead:
       LinkPoint.create(**point).save()
   db_close_handler()
 
