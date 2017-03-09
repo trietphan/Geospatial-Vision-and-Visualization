@@ -1,7 +1,6 @@
 import csv
 from peewee import * 
 from pathlib import Path
-from tqdm import tqdm # optional - remember to install tqdm using pip/pip3 
 
 db = SqliteDatabase('probe.db')
 
@@ -18,6 +17,16 @@ class ProbePoint(ProbeBase):
   altitude    = IntegerField()
   speed       = IntegerField() # stored in KPH 
   heading     = IntegerField() # degrees 
+  
+  def get_csv_headers():
+    return("sampleID", 
+          "dateTime", 
+          "sourceCode", 
+          "latitude", 
+          "longitude", 
+          "altitude", 
+          "speed", 
+          "heading")
 
 class LinkPoint(ProbeBase):
   linkPVID          = BigIntegerField()
@@ -37,6 +46,25 @@ class LinkPoint(ProbeBase):
   shapeInfo         = TextField() # array
   curvatureInfo     = TextField() # array
   slopeInfo         = TextField() # array 
+
+  def get_csv_headers(): 
+    return("linkPVID", 
+          "refNodeID", 
+          "nrefNodeID", 
+          "length", 
+          "functionalClass", 
+          "directionOfTravel", 
+          "speedCategory", 
+          "fromRefSpeedLimit", 
+          "toRefSpeedLimit", 
+          "fromRefNumLanes", 
+          "toRefNumLanes", 
+          "multiDigitized", 
+          "urban", 
+          "timeZone", 
+          "shapeInfo", 
+          "curvatureInfo", 
+          "slopeInfo")
 
 class MatchedPoints(ProbeBase):
   sampleID      = IntegerField() # ID is NOT unique
@@ -63,20 +91,20 @@ def setup(db):
   db.create_tables([ProbePoint, LinkPoint, MatchedPoints], safe=True)
   
   # Probe Data 
-  f = open('probe.csv', 'rU')
-  ProbeRead = csv.DictReader(f, fieldnames=("sampleID", "dateTime", "sourceCode", "latitude", "longitude", "altitude", "speed", "heading"))
+  f = open('probe_data_map_matching/Partition6467ProbePoints.csv', 'rU')
+  ProbeRead = csv.DictReader(f, fieldnames=ProbePoint.get_csv_headers())
   
-  # Link Data
-  f = open('link.csv', 'rU')
-  LinkRead = csv.DictReader(f, fieldnames=("linkPVID", "refNodeID", "nrefNodeID", "length", "functionalClass", "directionOfTravel", "speedCategory", "fromRefSpeedLimit", "toRefSpeedLimit", "fromRefNumLanes", "toRefNumLanes", "multiDigitized", "urban", "timeZone", "shapeInfo", "curvatureInfo", "slopeInfo"))
-  
-  # Writing to database
   with db.atomic():
-    for point in tqdm(list(ProbeRead)[:3000]): # remove [] to insert all rows
-      ProbePoint.create(sampleID=point['sampleID'], dateTime=point['dateTime'], sourceCode=point['sourceCode'], latitude=point['latitude'], longitude=point['longitude'], altitude=point['altitude'], speed=point['speed'], heading=point['heading']).save()
+    for point in ProbeRead:
+      ProbePoint.create(**point).save()
     
-    for point in tqdm(list(LinkRead)[:3000]):
-      LinkPoint.create(linkPVID=point['linkPVID'], refNodeID=point['refNodeID'], nrefNodeID=point['nrefNodeID'], length=point['length'], functionalClass=point['functionalClass'], directionOfTravel=point['directionOfTravel'], speedCategory=point['speedCategory'], fromRefSpeedLimit=point['fromRefSpeedLimit'], toRefSpeedLimit=point['toRefSpeedLimit'], fromRefNumLanes=point['fromRefNumLanes'], toRefNumLanes=point['toRefNumLanes'], multiDigitized=point['multiDigitized'], urban=point['urban'], timeZone=point['timeZone'], shapeInfo=point['shapeInfo'], curvatureInfo=point['curvatureInfo'], slopeInfo=point['slopeInfo']).save()
+  # Link Data
+  f = open('probe_data_map_matching/Partition6467LinkData.csv', 'rU')
+  LinkRead = csv.DictReader(f, fieldnames=LinkPoint.get_csv_headers())
+    
+  with db.atomic(): 
+    for point in LinkRead:
+      LinkPoint.create(**point).save()
   db_close_handler()
 
 def main(): 
