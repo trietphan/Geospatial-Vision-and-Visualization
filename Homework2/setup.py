@@ -100,8 +100,9 @@ def setup(db):
   ProbeRead = csv.DictReader(f, fieldnames=ProbePoint.get_csv_headers())
 
   with db.atomic():
+    insert_at_once = 500
     update_point = lambda point, x, y: add_items(point, [('x', x), ('y', y)])
-    for raw_points in in_chunks(ProbeRead, 500):
+    for raw_points in in_chunks(ProbeRead, insert_at_once):
       points = [update_point(p, *latlon_to_xy((float(p['latitude']), float(p['longitude']))))
                 for p in raw_points]
 
