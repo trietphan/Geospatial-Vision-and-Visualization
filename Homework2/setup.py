@@ -1,6 +1,9 @@
 import csv
-from peewee import * 
+from peewee import *
 from pathlib import Path
+
+from matching import (latlon_to_xy, extract_shape_info_bounds)
+from utils import (in_chunks, add_items)
 
 db = SqliteDatabase('probe.db')
 
@@ -16,7 +19,9 @@ class ProbePoint(ProbeBase):
   longitude   = DecimalField()
   altitude    = IntegerField()
   speed       = IntegerField() # stored in KPH 
-  heading     = IntegerField() # degrees 
+  heading     = IntegerField() # degrees
+  x           = DecimalField()
+  y           = DecimalField()
   
   def get_csv_headers():
     return("sampleID", 
@@ -93,10 +98,14 @@ def setup(db):
   # Probe Data 
   f = open('probe_data_map_matching/Partition6467ProbePoints.csv', 'rU')
   ProbeRead = csv.DictReader(f, fieldnames=ProbePoint.get_csv_headers())
-  
+
   with db.atomic():
-    for point in ProbeRead:
-      ProbePoint.create(**point).save()
+    update_point = lambda point, x, y: add_items(point, [('x', x), ('y', y)])
+    for raw_points in in_chunks(ProbeRead, 500):
+      points = [update_point(p, *latlon_to_xy((float(p['latitude']), float(p['longitude']))))
+                for p in raw_points]
+
+      ProbePoint.insert_many(points).execute()
     
   # Link Data
   f = open('probe_data_map_matching/Partition6467LinkData.csv', 'rU')
