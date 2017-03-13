@@ -1,51 +1,38 @@
-from math import (pi, tan, log, e)
-
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+
+from pyproj import Proj
 
 from setup import (ProbePoint, LinkPoint, MatchedPoints)
 from utils import pairwise
 
 
-def lat_lon_to_x_y(latlon, map_dimensions):
+def latlon_to_xy(latlon, projection=Proj(init='epsg:32618')):
     '''
-    Given a tuple with (lat, lon) produce a tuple with (x, y)
-
     :param latlon: pair with latitude and longitude
     :type latlon: (float, float)
+    :param projection: a function that will be used to convert (lat, lon) to (x, y)
+    :type projection: function (float, float) -> (float, float)
 
     :return: pair of x, y coordinates
     :rtype: (float, float)
     '''
-    def ln(number):
-        return log(number, e)
-
-    def get_merc_number(lat):
-        lat_radians = lat * pi / 180
-        return ln(tan((pi / 4) + (lat_radians / 2)));
-
     (lat, lon) = latlon
+    return projection(lat, lon)
 
-    x = (lon + 180) * (map_width / 360)
-    y = (map_height / 2) - (map_width * get_merc_number(lon) / (2 * pi))
-
-    return (x, y)
-
-def shape_info_unit_to_point(shape_info_unit, map_dimensions):
+def shape_info_unit_to_point(shape_info_unit):
     '''
     Given a string with shape info unit return a shapely Point object.
 
     :param shape_info_unit: string with shape info in "lat/lon/elevation?"
     :type shape_info_unit: str
-    :param map_dimensions: a tuple with 2d map dimensions
-    :type map_dimensions: (float, float)
 
     :return: a shapely Point with x,y coordinates
     :rtype: shapely.geometry.Point
     '''
     [lat, lon, *_] = shape_info_unit.split('/')
-    (map_width, map_height) = map_dimensions
-    (x, y) = lat_lon_to_x_y(float(lat), float(lon), map_dimensions)
+    latlon = (float(lat), float(lon))
+    (x, y) = latlon_to_xy(latlon)
 
     return Point(x, y)
 
@@ -87,10 +74,9 @@ def belongs_to_link(link, point):
     :return: does the point belong to a link
     :rtype: bool
     '''
-    tolerance = 0.00001
-    map_dimensions = (2000.0, 1000.0)
+    tolerance = 5
 
-    link_points = [shape_info_unit_to_point(p, map_dimensions)
+    link_points = [shape_info_unit_to_point(p)
                    for p in link.shapeInfo.split('|')]
 
     return any(is_near_line(line, point, tolerance)
