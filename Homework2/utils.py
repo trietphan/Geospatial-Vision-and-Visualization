@@ -1,4 +1,4 @@
-from itertools import tee
+from itertools import (tee, islice)
 
 def pairwise(iterable):
     '''s -> (s0,s1), (s1,s2), (s2, s3), ...
@@ -7,3 +7,16 @@ def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return zip(a, b)
+
+def in_chunks(iterable, size):
+    '''s, 3 -> [s0,s1,s2], [s3,s4,s5], ...'''
+    while True:
+        chunk = list(islice(iterable, size))
+        if not chunk:
+            raise StopIteration
+        yield chunk
+
+def add_items(dictionary, items):
+    result = dictionary.copy()
+    result.update(items)
+    return result
