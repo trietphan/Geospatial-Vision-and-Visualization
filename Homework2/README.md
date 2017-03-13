@@ -1,11 +1,21 @@
 # Homework 2: Probe Data Analysis for Road Slope
 
 ## Installing Dependencies 
+
+System
+
+```bash
+# required for shapely
+(venv) $ sudo apt-get install libgeos-dev
 ```
-pip3 install -r requirements.txt
+
+Python
+
+```bash
+(venv) $ pip install -r requirements.txt
 ```
 
 ## Running
-```
-python3 setup.py
+```bash
+(venv) $ python setup.py
 ```
