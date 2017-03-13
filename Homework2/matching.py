@@ -1,9 +1,8 @@
-from shapely.geometry import Point
+from shapely.geometry import (Point, MultiPoint)
 from shapely.geometry.polygon import Polygon
 
 from pyproj import Proj
 
-from setup import (ProbePoint, LinkPoint, MatchedPoints)
 from utils import pairwise
 
 
@@ -32,9 +31,8 @@ def shape_info_unit_to_point(shape_info_unit):
     '''
     [lat, lon, *_] = shape_info_unit.split('/')
     latlon = (float(lat), float(lon))
-    (x, y) = latlon_to_xy(latlon)
 
-    return Point(x, y)
+    return Point(*latlon_to_xy(latlon))
 
 def is_near_line(line, point, tolerance):
     '''
@@ -62,19 +60,22 @@ def is_near_line(line, point, tolerance):
 
     return point.within(bounds)
 
-def belongs_to_link(link, point):
+def belongs_to_link(link, probe_point):
     '''
-    Given a link and a point determine if point is close to a link
+    Given a link and a probe point determine if point is close to a link
 
     :param link: a road link object
     :type link: setup.LinkPoint
-    :param point: a shapely point
-    :type point: shapely.geometry.Point
+    :param point: a probe point object
+    :type point: setup.ProbePoint
 
     :return: does the point belong to a link
     :rtype: bool
     '''
     tolerance = 5
+
+    probe_point_latlon = (float(probe_point.latitude), float(probe_point.longitude))
+    point = Point(*latlon_to_xy(probe_point_latlon))
 
     link_points = [shape_info_unit_to_point(p)
                    for p in link.shapeInfo.split('|')]
