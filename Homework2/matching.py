@@ -82,3 +82,20 @@ def belongs_to_link(link, probe_point):
 
     return any(is_near_line(line, point, tolerance)
                for line in pairwise(link_points))
+
+def extract_shape_info_bounds(shape_info):
+    '''
+    Given shape info string return xy coordinate rectangle bounds for the shape
+
+    :param shape_info: a shape info string with 'lat/lon/elevation?|lat/lon/elevation?|...' format
+    :type shape_info: str
+
+    :return: 2 pairs of xy coordinates for the bounding rectangle
+    :rtype: ((float, float), (float, float))
+    '''
+    toks = (p.split('/') for p in shape_info.split('|'))
+    latlons = ((float(ts[0]), float(ts[1])) for ts in toks)
+    xys = [latlon_to_xy(latlon) for latlon in latlons]
+    (min_x, min_y, max_x, max_y) = MultiPoint(xys).envelope.bounds
+
+    return ((min_x, min_y), (max_x, max_y))
