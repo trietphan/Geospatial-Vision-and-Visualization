@@ -3,6 +3,7 @@
 *.jpg
 *.db
 probe_data_map_matching/
+*.db-journal
 
 # Created by https://www.gitignore.io/api/opencv,python
 
