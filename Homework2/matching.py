@@ -60,28 +60,36 @@ def is_near_line(line, point, tolerance):
 
     return point.within(bounds)
 
-def belongs_to_link(link, probe_point):
+def belongs_to(link):
     '''
-    Given a link and a probe point determine if point is close to a link
+    Given a link returns a function that determines wheter a point is close to a link
 
     :param link: a road link object
     :type link: setup.LinkPoint
-    :param point: a probe point object
-    :type point: setup.ProbePoint
 
-    :return: does the point belong to a link
-    :rtype: bool
+    :return: function that takes in point and checks if it's close to link
+    :rtype: function setup.ProbePoint -> bool
     '''
-    tolerance = 5
-
-    probe_point_latlon = (float(probe_point.latitude), float(probe_point.longitude))
-    point = Point(*latlon_to_xy(probe_point_latlon))
-
+    tolerance = 15
     link_points = [shape_info_unit_to_point(p)
                    for p in link.shapeInfo.split('|')]
 
-    return any(is_near_line(line, point, tolerance)
-               for line in pairwise(link_points))
+    def belongs_to_link(probe_point):
+        '''
+        :param probe_point: a probe point object
+        :type probe_point: setup.ProbePoint
+
+        :return:
+        :rtype: bool
+        '''
+        probe_point_latlon = (float(probe_point.latitude), float(probe_point.longitude))
+        point = Point(*latlon_to_xy(probe_point_latlon))
+        return any(is_near_line(line, point, tolerance)
+                   for line in pairwise(link_points))
+
+    return belongs_to_link
+
+
 
 def extract_shape_info_bounds(shape_info):
     '''
