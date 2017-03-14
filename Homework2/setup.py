@@ -80,6 +80,20 @@ class MatchedPoints(ProbeBase):
   distFromRef   = IntegerField()
   distFromLink  = IntegerField()
 
+  def get_csv_headers(): 
+    return("sampleID", 
+          "dateTime", 
+          "sourceCode", 
+          "latitude", 
+          "longitude", 
+          "altitude", 
+          "speed", 
+          "heading",
+          "linkPVID", 
+          "direction",
+          "distFromRef",
+          "distFromLink")
+
 def db_connect_handler(): 
   db.connect() # explicitness for safety
 
