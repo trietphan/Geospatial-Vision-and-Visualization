@@ -3,6 +3,15 @@ from matching import belongs_to
 
 
 def get_matched_probes(link):
+    '''
+    Given a link returns a list of nearby probes.
+
+    :param link: a road link object
+    :type link: setup.LinkPoint
+
+    :return: a list of probes that are close to the given link
+    :rtype: list[setup.ProbePoint]
+    '''
     tolerance = 10
     (min_x, min_y) = (link.minX, link.minY)
     (max_x, max_y) = (link.maxX, link.maxY)
