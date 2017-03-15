@@ -21,9 +21,9 @@ class ProbePoint(ProbeBase):
   altitude    = IntegerField()
   speed       = IntegerField() # stored in KPH 
   heading     = IntegerField() # degrees
-  x           = DecimalField()
-  y           = DecimalField()
-  
+  x           = DecimalField(index=True)
+  y           = DecimalField(index=True)
+
   def get_csv_headers():
     return (
       "sampleID",
