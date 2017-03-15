@@ -26,11 +26,28 @@ def get_matched_probes(link):
 
     return matched_probe_points
 
+def format_map_points(link, probes):
+    '''
+    For debugging purposes, output can be pasted directly into
+    https://www.mapcustomizer.com/ bulk entry
+    '''
+    probes = '\n'.join(['{},{} <green>'.format(p.latitude, p.longitude)
+                        for p in probes])
+
+    link_points = '\n'.join(['{},{} <red>'.format(*link_point.split('/'))
+                             for link_point in link.shapeInfo.split('|')])
+
+    return '\n'.join([link_points, probes])
+
+
 def main():
-    for link in LinkPoint.select().limit(2):
-        print(link.shapeInfo)
+    for link in LinkPoint.select().limit(5):
         matched_probes = get_matched_probes(link)
-        print('matched', len(matched_probes), 'probes')
+        print('Matched {} probes'.format(len(matched_probes)))
+        print('START'.center(40, '-'))
+        print(format_map_points(link, matched_probes))
+        print('END'.center(40, '-'))
+
 
 if __name__ == '__main__':
     main()
