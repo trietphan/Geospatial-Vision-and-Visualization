@@ -1,7 +1,10 @@
 import csv
-from peewee import * 
+from peewee import *
 from pathlib import Path
-from tqdm import tqdm # optional - remember to install tqdm using pip/pip3 
+
+from matching import (latlon_to_xy, extract_shape_info_bounds)
+from utils import (in_chunks, add_items)
+
 
 db = SqliteDatabase('probe.db')
 
@@ -17,12 +20,26 @@ class ProbePoint(ProbeBase):
   longitude   = DecimalField()
   altitude    = IntegerField()
   speed       = IntegerField() # stored in KPH 
-  heading     = IntegerField() # degrees 
+  heading     = IntegerField() # degrees
+  x           = DecimalField(index=True)
+  y           = DecimalField(index=True)
+
+  def get_csv_headers():
+    return (
+      "sampleID",
+      "dateTime",
+      "sourceCode",
+      "latitude",
+      "longitude",
+      "altitude",
+      "speed",
+      "heading"
+    )
 
 class LinkPoint(ProbeBase):
   linkPVID          = BigIntegerField()
   refNodeID         = BigIntegerField()
-  nrefNodeID        = BigIntegerField
+  nrefNodeID        = BigIntegerField()
   length            = DecimalField()
   functionalClass   = IntegerField()
   directionOfTravel = CharField()
@@ -36,9 +53,34 @@ class LinkPoint(ProbeBase):
   timeZone          = DecimalField()
   shapeInfo         = TextField() # array
   curvatureInfo     = TextField() # array
-  slopeInfo         = TextField() # array 
+  slopeInfo         = TextField() # array
+  minX              = DecimalField()
+  minY              = DecimalField()
+  maxX              = DecimalField()
+  maxY              = DecimalField()
 
-class MatchedPoints(ProbeBase):
+  def get_csv_headers(): 
+    return (
+      "linkPVID",
+      "refNodeID",
+      "nrefNodeID",
+      "length",
+      "functionalClass",
+      "directionOfTravel",
+      "speedCategory",
+      "fromRefSpeedLimit",
+      "toRefSpeedLimit",
+      "fromRefNumLanes",
+      "toRefNumLanes",
+      "multiDigitized",
+      "urban",
+      "timeZone",
+      "shapeInfo",
+      "curvatureInfo",
+      "slopeInfo"
+    )
+
+class MatchedPoint(ProbeBase):
   sampleID      = IntegerField() # ID is NOT unique
   dateTime      = DateTimeField()
   sourceCode    = IntegerField()
@@ -52,6 +94,20 @@ class MatchedPoints(ProbeBase):
   distFromRef   = IntegerField()
   distFromLink  = IntegerField()
 
+  def get_csv_headers(): 
+    return("sampleID", 
+          "dateTime", 
+          "sourceCode", 
+          "latitude", 
+          "longitude", 
+          "altitude", 
+          "speed", 
+          "heading",
+          "linkPVID", 
+          "direction",
+          "distFromRef",
+          "distFromLink")
+
 def db_connect_handler(): 
   db.connect() # explicitness for safety
 
@@ -60,23 +116,38 @@ def db_close_handler():
 
 def setup(db): 
   db_connect_handler()
-  db.create_tables([ProbePoint, LinkPoint, MatchedPoints], safe=True)
+  db.create_tables([ProbePoint, LinkPoint, MatchedPoint], safe=True)
   
   # Probe Data 
-  f = open('probe.csv', 'rU')
-  ProbeRead = csv.DictReader(f, fieldnames=("sampleID", "dateTime", "sourceCode", "latitude", "longitude", "altitude", "speed", "heading"))
-  
-  # Link Data
-  f = open('link.csv', 'rU')
-  LinkRead = csv.DictReader(f, fieldnames=("linkPVID", "refNodeID", "nrefNodeID", "length", "functionalClass", "directionOfTravel", "speedCategory", "fromRefSpeedLimit", "toRefSpeedLimit", "fromRefNumLanes", "toRefNumLanes", "multiDigitized", "urban", "timeZone", "shapeInfo", "curvatureInfo", "slopeInfo"))
-  
-  # Writing to database
+  ProbeRead = csv.DictReader(open('probe_data_map_matching/Partition6467ProbePoints.csv', 'rU'),
+                             fieldnames=ProbePoint.get_csv_headers())
+
   with db.atomic():
-    for point in tqdm(list(ProbeRead)[:3000]): # remove [] to insert all rows
-      ProbePoint.create(sampleID=point['sampleID'], dateTime=point['dateTime'], sourceCode=point['sourceCode'], latitude=point['latitude'], longitude=point['longitude'], altitude=point['altitude'], speed=point['speed'], heading=point['heading']).save()
+    insert_at_once = 500
+    update_point = lambda point, x, y: add_items(point, [('x', x), ('y', y)])
+
+    for raw_points in in_chunks(ProbeRead, insert_at_once):
+      points = (update_point(p, *latlon_to_xy((float(p['latitude']), float(p['longitude']))))
+                for p in raw_points)
+      ProbePoint.insert_many(points).execute()
     
-    for point in tqdm(list(LinkRead)[:3000]):
-      LinkPoint.create(linkPVID=point['linkPVID'], refNodeID=point['refNodeID'], nrefNodeID=point['nrefNodeID'], length=point['length'], functionalClass=point['functionalClass'], directionOfTravel=point['directionOfTravel'], speedCategory=point['speedCategory'], fromRefSpeedLimit=point['fromRefSpeedLimit'], toRefSpeedLimit=point['toRefSpeedLimit'], fromRefNumLanes=point['fromRefNumLanes'], toRefNumLanes=point['toRefNumLanes'], multiDigitized=point['multiDigitized'], urban=point['urban'], timeZone=point['timeZone'], shapeInfo=point['shapeInfo'], curvatureInfo=point['curvatureInfo'], slopeInfo=point['slopeInfo']).save()
+  # Link Data
+  LinkRead = csv.DictReader(open('probe_data_map_matching/Partition6467LinkData.csv', 'rU'),
+                            fieldnames=LinkPoint.get_csv_headers())
+
+  with db.atomic():
+    insert_at_once = 500
+    update_point = lambda point, mins, maxs: add_items(point,
+                                                       [('minX', mins[0]),
+                                                        ('minY', mins[1]),
+                                                        ('maxX', maxs[0]),
+                                                        ('maxY', maxs[1])])
+
+    for raw_points in in_chunks(LinkRead, insert_at_once):
+      points = (update_point(p, *extract_shape_info_bounds(p['shapeInfo']))
+                for p in raw_points)
+      LinkPoint.insert_many(points).execute()
+
   db_close_handler()
 
 def main(): 

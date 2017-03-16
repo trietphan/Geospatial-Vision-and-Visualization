@@ -3,6 +3,7 @@ from matching import belongs_to
 from math import sin, cos, sqrt, atan2, radians
 from datetime import datetime
 
+
 def get_matched_probes(link):
     '''
     Given a link returns a list of nearby probes.
@@ -31,7 +32,6 @@ def get_matched_probes(link):
     matched_probe_points = [p
                             for p in candidate_points.execute()
                             if belongs_to_link(p)]
-    
 
     return matched_probe_points
 
@@ -142,6 +142,7 @@ def main():
     for link in LinkPoint.select().limit(1):
         matched_probes = get_matched_probes(link)        
         #print(matched_probes[0].latitude)
+
         print('Matched {} probes'.format(len(matched_probes)))
         print('START'.center(40, '-'))
         print(format_map_points(link, matched_probes))
