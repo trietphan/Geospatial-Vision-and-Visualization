@@ -1,7 +1,4 @@
 peewee==2.9.0
-<<<<<<< HEAD
-googlemaps=2.4.6
-=======
 pyproj==1.9.5.1
 Shapely==1.5.17.post1
->>>>>>> upstream/dev
+googlemaps=2.4.6
