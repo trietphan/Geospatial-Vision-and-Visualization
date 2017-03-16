@@ -52,7 +52,6 @@ def main():
   start_time = time.time()
   split_insert(1) # part 1 
   split_insert(2) # part 2
-  print("time used: {}s".format(time.time() - start_time))
 
 if __name__ == "__main__":
   main()
