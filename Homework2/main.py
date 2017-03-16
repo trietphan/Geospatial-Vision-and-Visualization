@@ -1,4 +1,4 @@
-import googlemaps, json, csv
+import googlemaps, csv
 from googlemaps.roads import snap_to_roads
 from pathlib import Path
 from peewee import * 
