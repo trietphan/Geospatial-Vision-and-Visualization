@@ -5,10 +5,8 @@ from matching import belongs_to
 def get_matched_probes(link):
     '''
     Given a link returns a list of nearby probes.
-
     :param link: a road link object
     :type link: setup.LinkPoint
-
     :return: a list of probes that are close to the given link
     :rtype: list[setup.ProbePoint]
     '''
