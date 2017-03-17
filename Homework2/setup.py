@@ -13,16 +13,18 @@ class ProbeBase(Model):
     database = db
 
 class ProbePoint(ProbeBase):
-  sampleID    = BigIntegerField() # ID is NOT unique
-  dateTime    = DateTimeField()
-  sourceCode  = IntegerField()
-  latitude    = DecimalField()
-  longitude   = DecimalField()
-  altitude    = IntegerField()
-  speed       = IntegerField() # stored in KPH 
-  heading     = IntegerField() # degrees
-  x           = DecimalField(index=True)
-  y           = DecimalField(index=True)
+  sampleID         = BigIntegerField() # ID is NOT unique
+  dateTime         = DateTimeField()
+  sourceCode       = IntegerField()
+  latitude         = DecimalField()
+  longitude        = DecimalField()
+  altitude         = IntegerField()
+  speed            = IntegerField() # stored in KPH
+  heading          = IntegerField() # degrees
+  x                = DecimalField(index=True)
+  y                = DecimalField(index=True)
+  matchedLatitude  = DecimalField(null=True)
+  matchedLongitude = DecimalField(null=True)
 
   def get_csv_headers():
     return (
@@ -91,22 +93,24 @@ class MatchedPoint(ProbeBase):
   heading       = IntegerField() # degrees 
   linkPVID      = BigIntegerField()
   direction     = CharField()
-  distFromRef   = IntegerField()
-  distFromLink  = IntegerField()
+  distFromRef   = DecimalField()
+  distFromLink  = DecimalField()
 
   def get_csv_headers(): 
-    return("sampleID", 
-          "dateTime", 
-          "sourceCode", 
-          "latitude", 
-          "longitude", 
-          "altitude", 
-          "speed", 
-          "heading",
-          "linkPVID", 
-          "direction",
-          "distFromRef",
-          "distFromLink")
+    return (
+      "sampleID",
+      "dateTime",
+      "sourceCode",
+      "latitude",
+      "longitude",
+      "altitude",
+      "speed",
+      "heading",
+      "linkPVID",
+      "direction",
+      "distFromRef",
+      "distFromLink"
+    )
 
 def db_connect_handler(): 
   db.connect() # explicitness for safety

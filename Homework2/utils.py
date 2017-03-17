@@ -1,4 +1,4 @@
-from itertools import (tee, islice)
+from itertools import (tee, islice, groupby)
 
 def pairwise(iterable):
     '''s -> (s0,s1), (s1,s2), (s2, s3), ...
@@ -10,13 +10,41 @@ def pairwise(iterable):
 
 def in_chunks(iterable, size):
     '''s, 3 -> [s0,s1,s2], [s3,s4,s5], ...'''
-    while True:
-        chunk = list(islice(iterable, size))
-        if not chunk:
-            raise StopIteration
-        yield chunk
+
+    if '__len__' in dir(iterable):
+        iterable = list(iterable)
+        while iterable:
+            chunk = iterable[:size]
+            yield chunk
+            iterable = iterable[size:]
+        raise StopIteration
+    else:
+        while True:
+            chunk = list(islice(iterable, size))
+            if not chunk:
+                raise StopIteration
+            yield chunk
 
 def add_items(dictionary, items):
     result = dictionary.copy()
     result.update(items)
     return result
+
+def first(lst):
+    return lst[0]
+
+def last(lst):
+    return lst[-1]
+
+def group_by(key, lst):
+    sorted_lst = sorted(lst, key=lambda e: getattr(e, key))
+    return groupby(sorted_lst, key=lambda e: getattr(e, key))
+
+def flatten(lst):
+    return [item for sublst in lst for item in sublst]
+
+def dedup(lst, key):
+    seen = set()
+    return [e
+            for e in lst
+            if not (key(e) in seen or seen.add(key(e)))]

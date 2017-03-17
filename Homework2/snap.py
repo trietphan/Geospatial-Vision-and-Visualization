@@ -1,57 +1,46 @@
-import googlemaps, csv
-from googlemaps.roads import snap_to_roads
-from pathlib import Path
-from peewee import * 
-from setup import *
-from tqdm import tqdm 
+import grequests
+import os
 
-APIs = ['API_KEY_1', 'API_KEY_2']
+from setup import ProbePoint
+from utils import (in_chunks, flatten)
 
-def write(points): 
-  # write to csv file 
-  field_names = ('matched_lat', 'matched_lng', )
-  with open('snapped.csv', 'w') as f:
-    w = csv.DictWriter(f, fieldnames=field_names)
-    
-    for point in points:
-      # renaming column name (key)
-      point['location']['matched_lat'] = point['location'].pop('latitude')
-      point['location']['matched_lng'] = point['location'].pop('longitude')
-      w.writerow(point['location'])
-      
-def snap(coor, part):
-  if part == 1:
-    gmaps = googlemaps.Client(key=APIs[0])
-  else:
-    gmaps = googlemaps.Client(key=APIs[1])
-  points = snap_to_roads(gmaps, coor) # points snapped to road
-  write(points)
 
-def split_insert(part):
-  page = 0 
-  coor = []
-  if part == 1: # first half
-    threshold = ((ProbePoint.select().count()/100)/2) 
-  elif part == 2: # second half
-    threshold = (ProbePoint.select().count()/100)
-    page = ((ProbePoint.select().count()/100)/2)
-  else:
-    threshold = -1 # should never reach here
-  
-  while page != threshold:
-    page += 1
-    for point in tqdm(ProbePoint.select().paginate(page, 100)):
-      coor.append((float(point.latitude), float(point.longitude)))
-    snap(coor, part)
-    del coor[:]
+def create_params(probes):
+  result = []
+  for batch in in_chunks(probes, 100):
+    path = '|'.join(['{},{}'.format(p.latitude, p.longitude)
+                     for p in batch])
+    interpolate = True
 
-def main(): 
-  # The logic goes by 1 page per 100 records. For example, page 1 would return 1-100, page 2 (101-200) etc. With 3000 or 
-  # whichever the maximum row count is, it is divided by 100 to get the total amount of pages to iterate through and 
-  # calling snap each time to check for the snapped coordinates.
-  start_time = time.time()
-  split_insert(1) # part 1 
-  split_insert(2) # part 2
+    api_key = os.environ['API_KEY'] # will raise KeyError if not found
 
-if __name__ == "__main__":
-  main()
+    request_parameters = {
+      'path': path,
+      'interpolate': interpolate,
+      'key': api_key
+    }
+
+    result += [request_parameters]
+
+  return result
+
+def match_probes(probes):
+  url = 'https://roads.googleapis.com/v1/snapToRoads'
+  request_parameters = create_params(probes)
+  results = grequests.map(grequests.get(url, params=params)
+                          for params in request_parameters)
+
+  # and this is where I break loose :(
+  points = [result.json()['snappedPoints']
+            for result in results]
+
+  matched_latlons = [{p.get('originalIndex', -1): (p['location']['latitude'], p['location']['longitude'])
+                     for p in ps} for ps in points]
+
+  for (batch_idx, batch) in enumerate(in_chunks(probes, 100)):
+    for (idx, probe) in enumerate(batch):
+      latlon = matched_latlons[batch_idx].get(idx, None)
+      probe.matchedLatitude = float(latlon[0]) if latlon else probe.latitude
+      probe.matchedLongitude = float(latlon[1]) if latlon else probe.longitude
+
+  return probes
