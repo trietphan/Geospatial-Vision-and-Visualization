@@ -1,3 +1,6 @@
+from playhouse.shortcuts import model_to_dict
+import csv
+
 from setup import (ProbePoint, LinkPoint, MatchedPoint)
 from matching import belongs_to
 from attributes import (find_directions, create_matched_point, get_updated_link_shape)
@@ -44,8 +47,17 @@ def format_map_points(link, probes):
     return '\n'.join([link_points, probes])
 
 
+
 def main():
-    for link in LinkPoint.select().limit(2):
+    MatchedPointWriter = csv.DictWriter(open('matched_points_result.csv', 'w'),
+                                        extrasaction='ignore',
+                                        fieldnames=MatchedPoint.get_csv_headers())
+    MatchedPointWriter.writeheader()
+    LinkPointWriter = csv.DictWriter(open('link_point_result.csv', 'w'),
+                                     extrasaction='ignore',
+                                     fieldnames=LinkPoint.get_csv_headers())
+    LinkPointWriter.writeheader()
+    for link in LinkPoint.select().limit(1000):
         candidate_probes = get_candidate_probes(link)
         matched_probes = match_probes(candidate_probes)
 
@@ -62,11 +74,15 @@ def main():
         # insert matched points
         insert_at_once = 500
         for chunk in in_chunks(matched_points, insert_at_once):
+            for matched_point in chunk:
+                MatchedPointWriter.writerow(matched_point)
             MatchedPoint.insert_many(chunk).execute()
+
 
         # update slopes
         updated_link_shape = get_updated_link_shape(link, matched_probes)
         link.shapeInfo = updated_link_shape
+        LinkPointWriter.writerow(model_to_dict(link))
         link.save()
 
 

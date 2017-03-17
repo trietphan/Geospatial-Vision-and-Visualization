@@ -93,7 +93,8 @@ def get_updated_link_shape(link, probes, get_distance=get_distance):
 
     slopes = [compute_slope(p1, p2)
               for (p1, p2) in pairwise(sorted_by_distance)]
-    average_slope = mean([s for s in slopes if s])
+    slopes = [s for s in slopes if s]
+    average_slope = mean(slopes) if len(slopes) > 0 else 0.0
 
     result = []
     for node in link.shapeInfo.split('|'):
