@@ -9,7 +9,20 @@ def get_distance(latlon1, latlon2):
     return distance
 
 def find_directions(link, probes, get_distance=get_distance):
-    pass
+    by_sample_id = group_by('sampleID', probes)
+
+    result = {}
+    for (sample_id, probes) in by_sample_id:
+        sorted_by_datetime = sorted(probes, key=lambda p: dateTimeParser.parse(p.dateTime))
+
+        if len(sorted_by_datetime) > 1:
+            distance_from_first = find_distance_from_ref(link, first(sorted_by_datetime))
+            distance_from_last = find_distance_from_ref(link, last(sorted_by_datetime))
+            result[sample_id] = 'F' if distance_from_first < distance_from_last else 'T'
+        else:
+            result[sample_id] = '?'
+
+    return result
 
 def find_distance_from_ref(link, probe, get_distance=get_distance):
     [lat_ref, lon_ref, *_] = first(link.shapeInfo.split('|')).split('/')

@@ -29,3 +29,16 @@ def add_items(dictionary, items):
     result = dictionary.copy()
     result.update(items)
     return result
+
+def first(lst):
+    return lst[0]
+
+def last(lst):
+    return lst[-1]
+
+def group_by(key, lst):
+    sorted_lst = sorted(lst, key=lambda e: getattr(e, key))
+    return groupby(sorted_lst, key=lambda e: getattr(e, key))
+
+def flatten(lst):
+    return [item for sublst in lst for item in sublst]
