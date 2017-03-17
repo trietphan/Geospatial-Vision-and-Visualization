@@ -30,15 +30,17 @@ def match_probes(probes):
   results = grequests.map(grequests.get(url, params=params)
                           for params in request_parameters)
 
-  points = flatten([result.json()['snappedPoints']
-                    for result in results])
+  # and this is where I break loose :(
+  points = [result.json()['snappedPoints']
+            for result in results]
 
-  matched_latlons = [(p['location']['latitude'], p['location']['longitude'])
-                     for p in points]
+  matched_latlons = [{p.get('originalIndex', -1): (p['location']['latitude'], p['location']['longitude'])
+                     for p in ps} for ps in points]
 
-  matched_probes = []
-  for (probe, matched_latlon) in zip(probes, matched_latlons):
-    probe.matchedLatitude = matched_latlon[0]
-    probe.matchedLongitude = matched_latlon[1]
+  for (batch_idx, batch) in enumerate(in_chunks(probes, 100)):
+    for (idx, probe) in enumerate(batch):
+      latlon = matched_latlons[batch_idx].get(idx, None)
+      probe.matchedLatitude = float(latlon[0]) if latlon else probe.latitude
+      probe.matchedLongitude = float(latlon[1]) if latlon else probe.longitude
 
   return probes

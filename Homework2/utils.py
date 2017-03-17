@@ -42,3 +42,9 @@ def group_by(key, lst):
 
 def flatten(lst):
     return [item for sublst in lst for item in sublst]
+
+def dedup(lst, key):
+    seen = set()
+    return [e
+            for e in lst
+            if not (key(e) in seen or seen.add(key(e)))]

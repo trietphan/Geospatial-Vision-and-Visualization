@@ -1,7 +1,15 @@
 from dateutil import parser as datetime_parser
 from pyproj import Geod
+from math import atan
+from statistics import mean
 
-from utils import (first, last, add_items, group_by, pairwise)
+from utils import (first,
+                   last,
+                   add_items,
+                   group_by,
+                   pairwise,
+                   dedup,
+                   pairwise)
 
 def get_distance(latlon1, latlon2):
     geod_inv = Geod(ellps='WGS84').inv
@@ -63,5 +71,33 @@ def create_matched_point(link, probe, get_direction):
 
     return matched_point
 
-def get_link_slope(link, probes, get_distance=get_distance):
-    pass
+def compute_slope(p1, p2):
+    rise = p1.altitude - p2.altitude
+    run = get_distance((p1.latitude, p1.longitude), (p2.latitude, p2.longitude))
+    try:
+        return atan(rise / run)
+    except ZeroDivisionError:
+        return None
+
+def get_updated_link_shape(link, probes, get_distance=get_distance):
+    [ref_node_shape, *_] = link.shapeInfo.split('|')
+    [ref_node_lat, ref_node_lon, slope] = ref_node_shape.split('/')
+
+    ref_latlon = (float(ref_node_lat), float(ref_node_lon))
+
+    get_distance_to_ref_node = lambda p: get_distance((p.matchedLatitude, p.matchedLongitude), ref_latlon)
+
+    unique_probes = dedup(probes, get_distance_to_ref_node)
+    sorted_by_distance = sorted(unique_probes,
+                                key=get_distance_to_ref_node)
+
+    slopes = [compute_slope(p1, p2)
+              for (p1, p2) in pairwise(sorted_by_distance)]
+    average_slope = mean([s for s in slopes if s])
+
+    result = []
+    for node in link.shapeInfo.split('|'):
+        [lat, lon, slope] = node.split('/')
+        result += ['{}/{}/{}'.format(lat, lon, slope if slope else average_slope)]
+
+    return '|'.join(result)

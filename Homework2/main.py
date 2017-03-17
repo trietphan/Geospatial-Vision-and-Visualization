@@ -1,6 +1,6 @@
 from setup import (ProbePoint, LinkPoint, MatchedPoint)
 from matching import belongs_to
-from attributes import (find_directions, create_matched_point)
+from attributes import (find_directions, create_matched_point, get_updated_link_shape)
 from snap import match_probes
 from utils import in_chunks
 
@@ -59,12 +59,15 @@ def main():
         matched_points = (create_matched_point(link, probe, get_direction)
                           for probe in matched_probes)
 
+        # insert matched points
         insert_at_once = 500
         for chunk in in_chunks(matched_points, insert_at_once):
-            print('inserting', len(chunk), 'matched points')
             MatchedPoint.insert_many(chunk).execute()
 
-        link_slope = get_link_slope(link, matched_probes)
+        # update slopes
+        updated_link_shape = get_updated_link_shape(link, matched_probes)
+        link.shapeInfo = updated_link_shape
+        link.save()
 
 
 if __name__ == '__main__':
