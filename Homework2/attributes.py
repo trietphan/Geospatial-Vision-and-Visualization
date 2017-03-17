@@ -12,7 +12,11 @@ def find_directions(link, probes, get_distance=get_distance):
     pass
 
 def find_distance_from_ref(link, probe, get_distance=get_distance):
-    pass
+    [lat_ref, lon_ref, *_] = first(link.shapeInfo.split('|')).split('/')
+    latlon_ref = (float(lat_ref), float(lon_ref))
+    latlon_probe = (probe.latitude, probe.longitude)
+
+    return get_distance(latlon_ref, latlon_probe)
 
 def find_distance_from_link(probe, get_distance=get_distance):
     latlon_link = (probe.matchedLatitude, probe.matchedLongitude)
