@@ -15,7 +15,10 @@ def find_distance_from_ref(link, probe, get_distance=get_distance):
     pass
 
 def find_distance_from_link(probe, get_distance=get_distance):
-    pass
+    latlon_link = (probe.matchedLatitude, probe.matchedLongitude)
+    latlon_probe = (probe.latitude, probe.longitude)
+
+    return get_distance(latlon_link, latlon_probe)
 
 def create_matched_point(link, probe, get_direction):
     direction = get_direction(probe)
