@@ -89,8 +89,6 @@ def belongs_to(link):
 
     return belongs_to_link
 
-
-
 def extract_shape_info_bounds(shape_info):
     '''
     Given shape info string return xy coordinate rectangle bounds for the shape

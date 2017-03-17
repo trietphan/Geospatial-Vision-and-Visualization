@@ -1,4 +1,4 @@
-from dateutil import parser as dateTimeParser
+from dateutil import parser as datetime_parser
 from pyproj import Geod
 
 from utils import (first, last, add_items, group_by, pairwise)
@@ -13,7 +13,7 @@ def find_directions(link, probes, get_distance=get_distance):
 
     result = {}
     for (sample_id, probes) in by_sample_id:
-        sorted_by_datetime = sorted(probes, key=lambda p: dateTimeParser.parse(p.dateTime))
+        sorted_by_datetime = sorted(probes, key=lambda p: datetime_parser.parse(p.dateTime))
 
         if len(sorted_by_datetime) > 1:
             distance_from_first = find_distance_from_ref(link, first(sorted_by_datetime))
