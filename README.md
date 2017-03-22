@@ -1,7 +1,7 @@
 # Geospatial-Vision-and-Visualization
 Geospatial Vision and Visualization - CS 513
 
-# Using Vagrant Box
+## Using Vagrant Box
 
 Install [Vagrant](https://www.vagrantup.com/) first. Here's a [link](https://www.vagrantup.com/docs/installation/) to instructions.
 
