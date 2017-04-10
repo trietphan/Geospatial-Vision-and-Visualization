@@ -1,4 +1,5 @@
 from math import (atan, exp, pi, sin, radians, log)
+from itertools import product
 
 def clip(n, min_value, max_value):
     '''
@@ -68,3 +69,22 @@ def latlon_to_pixel(latlon, detail_level=20):
 
     return (pixel_x, pixel_y)
 
+def find_centers(latlon1, latlon2, size=(512, 512)):
+    '''
+    Find all of the possible centers given a pair of (lat, lon) coordinates
+    :param latlon1: southwest coordinate pair (lat, lon)
+    :type latlon1: (float, float)
+    :param latlon2: northeast coordinate pair (lat, lon)
+    :type latlon2: (float, float)
+
+    :return: list of (lat, lon) centers for pictures
+    :rtype: [(float, float)]
+    '''
+    (pixel_x1, pixel_y1) = latlon_to_pixel(latlon1)
+    (pixel_x2, pixel_y2) = latlon_to_pixel(latlon2)
+
+    xs = range(pixel_x1, pixel_x2 + 1, size[0])
+    ys = range(pixel_y1, pixel_y2 + 1, -size[1])
+
+    return [pixel_to_latlon(p)
+            for p in product(xs, ys)]
