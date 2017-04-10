@@ -10,7 +10,8 @@ def main():
     (centers, num_columns) = find_centers(latlon1, latlon2)
 
     images = get_images(centers)
-    write(stitch(map(bytes_to_image, images), num_columns))
+    write("result.jpg",
+          stitch(map(bytes_to_image, images), num_columns))
 
 
 if __name__ == '__main__':
