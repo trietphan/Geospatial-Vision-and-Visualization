@@ -1,4 +1,5 @@
 import os
+import grequests
 
 def create_url(center, size=20):
     '''
@@ -23,3 +24,22 @@ def create_request_params():
         'mapSize': ','.join(map(str, MAP_SIZE)),
         'key': API_KEY
     }
+
+def get_images(centers):
+    '''
+    Given a list of centers get a list of images
+    :param centers: (lat, lon) list of pairs
+    :type center: iterable[(float, float)]
+
+    :return: generator with images that correspond to given centers
+    :rtype: generator[bytes]
+    '''
+    urls = (create_url(c) for c in centers)
+    params = create_request_params()
+
+    results = grequests.map(grequests.get(url, params=params)
+                            for url in urls)
+
+    images = (r.content for r in results)
+
+    return images
