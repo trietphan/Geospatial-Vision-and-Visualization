@@ -1,6 +1,8 @@
 import os
 import grequests
 
+LABEL_PADDING = 30
+
 def create_url(center, size=20):
     '''
     Create a url that can be used to retrieve the image for a given center
@@ -19,7 +21,7 @@ def create_url(center, size=20):
 
 def create_request_params():
     API_KEY = os.environ['API_KEY']
-    MAP_SIZE = (512, 572)
+    MAP_SIZE = (512, 512 + LABEL_PADDING * 2)
     return {
         'mapSize': ','.join(map(str, MAP_SIZE)),
         'key': API_KEY

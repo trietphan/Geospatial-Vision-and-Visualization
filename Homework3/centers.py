@@ -77,8 +77,8 @@ def find_centers(latlon1, latlon2, size=(512, 512)):
     :param latlon2: northeast coordinate pair (lat, lon)
     :type latlon2: (float, float)
 
-    :return: list of (lat, lon) centers for pictures
-    :rtype: [(float, float)]
+    :return: list of (lat, lon) centers for pictures and number of columns
+    :rtype: ([(float, float)], int)
     '''
     (pixel_x1, pixel_y1) = latlon_to_pixel(latlon1)
     (pixel_x2, pixel_y2) = latlon_to_pixel(latlon2)
@@ -86,5 +86,8 @@ def find_centers(latlon1, latlon2, size=(512, 512)):
     xs = range(pixel_x1, pixel_x2 + 1, size[0])
     ys = range(pixel_y1, pixel_y2 + 1, -size[1])
 
-    return [pixel_to_latlon(p)
-            for p in product(xs, ys)]
+    num_columns = len(ys)
+    centers = [pixel_to_latlon(p)
+               for p in product(xs, ys)]
+
+    return (centers, num_columns)
